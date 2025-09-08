@@ -1,0 +1,33 @@
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+**/node_modules/
+npm-debug.log
+package-lock.json
+
+# Env files
+*.env
+
+# Logs
+logs/
+*.log
+
+# VSCode
+.vscode/
+
+# Build outputs
+build/
+dist/
+
+# Flutter
+**/build/
+**/.dart_tool/
+
+# IDE
+*.iml
+
+# API data
+ChefPilot-API/data/
+ChefPilot-API/uploads/

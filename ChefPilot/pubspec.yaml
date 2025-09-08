@@ -1,0 +1,19 @@
+name: chefpilot
+description: A scaffolded ChefPilot Flutter app placeholder to match coding guidelines.
+publish_to: 'none'
+environment:
+  sdk: ">=2.18.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^0.13.6
+  provider: ^6.0.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true

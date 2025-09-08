@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  api:
+    name: API CI
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Create .env for API
+        run: |
+          mkdir -p ChefPilot-API/data
+          if [ -z "${{ secrets.JWT_SECRET }}" ]; then
+            echo "Missing JWT_SECRET secret. Aborting." && exit 1
+          fi
+          printf "JWT_SECRET=%s\nDB_PATH=./data/chefpilot.sqlite3\nAPI_BASE_URL=http://127.0.0.1:3000\n" "${{ secrets.JWT_SECRET }}" > ChefPilot-API/.env
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+      - name: Install dependencies (API)
+        working-directory: ChefPilot-API
+        run: |
+          npm ci
+
+      - name: Prepare DB (migrate + seed)
+        working-directory: ChefPilot-API
+        run: |
+          npm run setup
+
+      - name: Run tests (API)
+        working-directory: ChefPilot-API
+        run: |
+          npm test --silent
+
+      - name: Lint (if available)
+        working-directory: ChefPilot-API
+        run: |
+          if [ -f package.json ] && jq -e '.scripts.lint' package.json >/dev/null 2>&1; then
+            npm run lint
+          else
+            echo "No lint script defined"
+          fi
