@@ -221,9 +221,10 @@ class _SettingsScreenState extends State<SettingsScreen>
                   child: const Text('Cancel')),
               ElevatedButton(
                 onPressed: () async {
+                  final messenger = ScaffoldMessenger.of(context);
                   if (selectedTenant == null ||
                       nameController.text.trim().isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    messenger.showSnackBar(const SnackBar(
                         content: Text('Tenant and name required')));
                     return;
                   }
@@ -246,19 +247,20 @@ class _SettingsScreenState extends State<SettingsScreen>
                   );
                   final auth = Provider.of<AuthService>(context, listen: false);
                   final billing = BillingService(auth);
+                  final dialogNav = Navigator.of(context);
                   final id =
                       await billing.createOverride(selectedTenant!['id']!, p);
                   if (id != null) {
                     // attach server id and reload from server
                     await _loadOverrides();
                     if (!mounted) return;
-                    ScaffoldMessenger.of(context)
+                    messenger
                         .showSnackBar(const SnackBar(content: Text('Created')));
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                         const SnackBar(content: Text('Failed to create')));
                   }
-                  Navigator.of(context).pop();
+                  dialogNav.pop();
                 },
                 child: const Text('Create'),
               ),
@@ -312,8 +314,13 @@ class _SettingsScreenState extends State<SettingsScreen>
               // Delete on the left as a warm red outlined button
               OutlinedButton(
                 onPressed: () async {
+                  // Capture navigator, messenger and services before awaiting async operations
+                  final dialogNav = Navigator.of(context);
+                  final messenger = ScaffoldMessenger.of(context);
+                  final auth = Provider.of<AuthService>(context, listen: false);
+                  final billing = BillingService(auth);
                   if (!isCustom) {
-                    Navigator.of(context).pop();
+                    dialogNav.pop();
                     return;
                   }
                   final confirm = await showDialog<bool>(
@@ -334,17 +341,14 @@ class _SettingsScreenState extends State<SettingsScreen>
                   );
                   if (confirm != true) return;
                   if (p.serverId != null) {
-                    final auth =
-                        Provider.of<AuthService>(context, listen: false);
-                    final billing = BillingService(auth);
                     final ok = await billing.deleteOverride(p.serverId!);
                     if (ok) {
                       await _loadOverrides();
                       if (!mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      messenger.showSnackBar(
                           const SnackBar(content: Text('Deleted')));
                     } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      messenger.showSnackBar(
                           const SnackBar(content: Text('Failed to delete')));
                     }
                   } else {
@@ -353,7 +357,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                         c.effectiveAt == p.effectiveAt);
                     if (idx != -1) setState(() => custom.removeAt(idx));
                   }
-                  Navigator.of(context).pop();
+                  dialogNav.pop();
                 },
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: Colors.deepOrange),
@@ -365,6 +369,8 @@ class _SettingsScreenState extends State<SettingsScreen>
               const SizedBox(width: 8),
               ElevatedButton(
                 onPressed: () async {
+                  final dialogNav = Navigator.of(context);
+                  final messenger = ScaffoldMessenger.of(context);
                   // prepare standalone/parent values from price/priceType
                   final parsedPrice = double.tryParse(priceController.text);
                   double newStandalone = p.standalonePricePerUser;
@@ -411,11 +417,11 @@ class _SettingsScreenState extends State<SettingsScreen>
                       if (ok) {
                         await _loadOverrides();
                         if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        messenger.showSnackBar(
                             const SnackBar(content: Text('Updated')));
                       } else {
                         if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        messenger.showSnackBar(
                             const SnackBar(content: Text('Failed to update')));
                       }
                     } else {
@@ -429,11 +435,11 @@ class _SettingsScreenState extends State<SettingsScreen>
                         if (newId != null) {
                           await _loadOverrides();
                           if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          messenger.showSnackBar(
                               const SnackBar(content: Text('Saved to server')));
                         } else {
                           if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          messenger.showSnackBar(
                               const SnackBar(content: Text('Failed to save')));
                         }
                       } else {
@@ -447,6 +453,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                     final auth =
                         Provider.of<AuthService>(context, listen: false);
                     final billing = BillingService(auth);
+                    final messenger = ScaffoldMessenger.of(context);
                     bool ok = false;
                     if (p.serverId != null) {
                       ok = await billing.updateSchedule(p.serverId!, updated);
@@ -454,13 +461,13 @@ class _SettingsScreenState extends State<SettingsScreen>
                       ok = await billing.schedulePriceUpdate(updated);
                     }
                     if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    messenger.showSnackBar(SnackBar(
                         content: Text(ok
                             ? (p.serverId != null ? 'Updated' : 'Scheduled')
                             : 'Failed')));
                     if (ok) await _load();
                   }
-                  Navigator.of(context).pop();
+                  dialogNav.pop();
                 },
                 // Use default button styling for Update
                 child: const Text('Update'),
@@ -484,125 +491,77 @@ class _SettingsScreenState extends State<SettingsScreen>
           Tab(text: 'Custom Pricing'),
         ]),
       ),
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
-              controller: _tabController,
-              children: [
-                // Current pricing list - compact cards
-                ListView.builder(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                  itemCount: currentAggregated.isNotEmpty
-                      ? currentAggregated.length
-                      : current.length,
-                  itemBuilder: (context, i) {
-                    final p = currentAggregated.isNotEmpty
-                        ? currentAggregated[i]
-                        : current[i];
-                    return Card(
-                      elevation: 1,
-                      margin: const EdgeInsets.symmetric(vertical: 6),
-                      child: InkWell(
-                        onTap: () => _showUpdateDialog(p, isCustom: false),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 10, horizontal: 12),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(p.featureId,
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.w600)),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                        '${p.priceType ?? 'standalone'} • ${p.trialDays}d',
-                                        style: const TextStyle(
-                                            color: Colors.black54,
-                                            fontSize: 12)),
-                                    if (p.effectiveAt != null)
-                                      Text(
-                                          'Effective: ${p.effectiveAt!.toLocal().toIso8601String()}',
-                                          style: const TextStyle(
-                                              color: Colors.black45,
-                                              fontSize: 11)),
-                                  ],
-                                ),
-                              ),
-                              Chip(
-                                  label: Text(
-                                      '\$${(p.price ?? p.standalonePricePerUser).toStringAsFixed(2)}')),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-
-                // Custom pricing tab with add button and tenant-required flow
-                Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Custom Pricing',
-                              style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.w600)),
-                          ElevatedButton.icon(
-                            onPressed: () => _showAddCustomDialog(),
-                            icon: const Icon(Icons.add),
-                            label: const Text('Add'),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(12),
-                        itemCount: custom.length,
+      body: Column(
+        children: [
+          // Feature Management menu entry (always visible)
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+            child: ListTile(
+              title: const Text('Feature Management'),
+              subtitle: const Text('Manage feature flags and rollout plans'),
+              leading: const Icon(Icons.settings_backup_restore),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () =>
+                  Navigator.of(context).pushNamed('/feature-management'),
+            ),
+          ),
+          // Main tab content
+          Expanded(
+            child: loading
+                ? const Center(child: CircularProgressIndicator())
+                : TabBarView(
+                    controller: _tabController,
+                    children: [
+                      // Current pricing list - compact cards
+                      ListView.builder(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 8, horizontal: 12),
+                        itemCount: currentAggregated.isNotEmpty
+                            ? currentAggregated.length
+                            : current.length,
                         itemBuilder: (context, i) {
-                          final p = custom[i];
-                          // final expanded = _expanded[key] ?? false;
+                          final p = currentAggregated.isNotEmpty
+                              ? currentAggregated[i]
+                              : current[i];
                           return Card(
-                            margin: const EdgeInsets.symmetric(vertical: 8),
+                            elevation: 1,
+                            margin: const EdgeInsets.symmetric(vertical: 6),
                             child: InkWell(
-                              onTap: () => _showUpdateDialog(p, isCustom: true),
+                              onTap: () =>
+                                  _showUpdateDialog(p, isCustom: false),
                               child: Padding(
-                                padding: const EdgeInsets.all(12),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 10, horizontal: 12),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(p.featureId,
-                                            style: const TextStyle(
-                                                fontWeight: FontWeight.w600)),
-                                        Chip(
-                                            label: Text(
-                                                '\$${(p.price ?? p.standalonePricePerUser).toStringAsFixed(2)}')),
-                                      ],
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(p.featureId,
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.w600)),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                              '${p.priceType ?? 'standalone'} • ${p.trialDays}d',
+                                              style: const TextStyle(
+                                                  color: Colors.black54,
+                                                  fontSize: 12)),
+                                          if (p.effectiveAt != null)
+                                            Text(
+                                                'Effective: ${p.effectiveAt!.toLocal().toIso8601String()}',
+                                                style: const TextStyle(
+                                                    color: Colors.black45,
+                                                    fontSize: 11)),
+                                        ],
+                                      ),
                                     ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                        '${p.priceType ?? 'standalone'} • ${p.trialDays}d',
-                                        style: const TextStyle(
-                                            color: Colors.black54,
-                                            fontSize: 12)),
-                                    if (p.effectiveAt != null)
-                                      Text(
-                                          'Effective: ${p.effectiveAt!.toLocal().toIso8601String()}',
-                                          style: const TextStyle(
-                                              color: Colors.black45,
-                                              fontSize: 11)),
+                                    Chip(
+                                        label: Text(
+                                            '\$${(p.price ?? p.standalonePricePerUser).toStringAsFixed(2)}')),
                                   ],
                                 ),
                               ),
@@ -610,11 +569,86 @@ class _SettingsScreenState extends State<SettingsScreen>
                           );
                         },
                       ),
-                    )
-                  ],
-                ),
-              ],
-            ),
+
+                      // Custom pricing tab with add button and tenant-required flow
+                      Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('Custom Pricing',
+                                    style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600)),
+                                ElevatedButton.icon(
+                                  onPressed: () => _showAddCustomDialog(),
+                                  icon: const Icon(Icons.add),
+                                  label: const Text('Add'),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Expanded(
+                            child: ListView.builder(
+                              padding: const EdgeInsets.all(12),
+                              itemCount: custom.length,
+                              itemBuilder: (context, i) {
+                                final p = custom[i];
+                                // final expanded = _expanded[key] ?? false;
+                                return Card(
+                                  margin:
+                                      const EdgeInsets.symmetric(vertical: 8),
+                                  child: InkWell(
+                                    onTap: () =>
+                                        _showUpdateDialog(p, isCustom: true),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(12),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(p.featureId,
+                                                  style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w600)),
+                                              Chip(
+                                                  label: Text(
+                                                      '\$${(p.price ?? p.standalonePricePerUser).toStringAsFixed(2)}')),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                              '${p.priceType ?? 'standalone'} • ${p.trialDays}d',
+                                              style: const TextStyle(
+                                                  color: Colors.black54,
+                                                  fontSize: 12)),
+                                          if (p.effectiveAt != null)
+                                            Text(
+                                                'Effective: ${p.effectiveAt!.toLocal().toIso8601String()}',
+                                                style: const TextStyle(
+                                                    color: Colors.black45,
+                                                    fontSize: 11)),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          )
+                        ],
+                      ),
+                    ],
+                  ), // end TabBarView
+          ), // end Expanded
+        ], // end Column children
+      ), // end Column
     );
   }
 }

@@ -32,10 +32,10 @@ class _LoginScreenState extends State<LoginScreen> {
     });
     try {
       final uri = Uri.parse('http://127.0.0.1:3000/api/users');
-      print('[LoginScreen] fetching users from: $uri');
+      debugPrint('[LoginScreen] fetching users from: $uri');
       final resp = await http.get(uri).timeout(const Duration(seconds: 5));
-      print('[LoginScreen] users response status: ${resp.statusCode}');
-      print('[LoginScreen] users response body: ${resp.body}');
+      debugPrint('[LoginScreen] users response status: ${resp.statusCode}');
+      debugPrint('[LoginScreen] users response body: ${resp.body}');
       if (resp.statusCode == 200) {
         final list = jsonDecode(resp.body) as List<dynamic>;
         _users = list.map((e) {
@@ -48,7 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }).toList();
       } else {
         // non-200: use local fallback but avoid alarming the user
-        print(
+        debugPrint(
             '[LoginScreen] users fetch returned ${resp.statusCode}, using fallback');
         _users = [
           {'id': 'owner-1', 'username': 'admin', 'password': 'password123'},
@@ -58,7 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (err) {
       // Log error and use fallback users. Don't present a blocking error to the user.
-      print('[LoginScreen] users fetch error: $err');
+      debugPrint('[LoginScreen] users fetch error: $err');
       _users = [
         {'id': 'owner-1', 'username': 'admin', 'password': 'password123'},
         {'id': 'test-1', 'username': 'testuser', 'password': 'testpass'},
@@ -119,7 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   .map((u) => DropdownMenuItem(
                       value: u['username'], child: Text(u['username'] ?? '')))
                   .toList(),
-              decoration: InputDecoration(labelText: 'Select user'),
+              decoration: const InputDecoration(labelText: 'Select user'),
               onChanged: (v) {
                 try {
                   setState(() {
@@ -133,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   });
                 } catch (e) {
                   // guard against unexpected runtime errors while selecting
-                  print('[LoginScreen] selection error: $e');
+                  debugPrint('[LoginScreen] selection error: $e');
                 }
               },
             ),
@@ -146,12 +146,12 @@ class _LoginScreenState extends State<LoginScreen> {
             // Keep username editable even when selected from dropdown
             TextField(
               controller: _userCtrl,
-              decoration: InputDecoration(labelText: 'Username'),
+              decoration: const InputDecoration(labelText: 'Username'),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _passCtrl,
-              decoration: InputDecoration(labelText: 'Password'),
+              decoration: const InputDecoration(labelText: 'Password'),
               obscureText: true,
             ),
             const SizedBox(height: 20),

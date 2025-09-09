@@ -7,6 +7,7 @@ import 'screens/login_screen.dart';
 import 'screens/appowner_dashboard.dart';
 import 'screens/settings_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/feature_management_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -47,6 +48,7 @@ class MyApp extends StatelessWidget {
           '/': (_) => const LoginScreen(),
           '/appowner': (_) => const AppOwnerDashboard(),
           '/settings': (_) => const SettingsScreen(),
+          '/feature-management': (_) => const FeatureManagementScreen(),
           // navigate to '/profile/<userId>' using Navigator.pushNamed(context, '/profile/USERID')
         },
         onGenerateRoute: (settings) {
@@ -59,8 +61,9 @@ class MyApp extends StatelessWidget {
         },
         // Inject a Banner-style debug ribbon bottom-left in debug builds that fades after 5s
         builder: (context, child) {
-          if (!kDebugMode || child == null)
+          if (!kDebugMode || child == null) {
             return child ?? const SizedBox.shrink();
+          }
           return DebugRibbonOverlay(child: child);
         },
       ),
@@ -131,19 +134,19 @@ class _DebugRibbonOverlayState extends State<DebugRibbonOverlay>
           child: AnimatedOpacity(
             opacity: _visible ? 1.0 : 0.0,
             duration: const Duration(milliseconds: 600),
-            child: Align(
+            child: const Align(
               alignment: Alignment.topRight,
               child: Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: EdgeInsets.all(8.0),
                 child: Banner(
                   message: 'DEBUG',
                   location: BannerLocation.topEnd,
                   color: Colors.redAccent,
-                  textStyle: const TextStyle(
+                  textStyle: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 12),
-                  child: const SizedBox(width: 80, height: 80),
+                  child: SizedBox(width: 80, height: 80),
                 ),
               ),
             ),

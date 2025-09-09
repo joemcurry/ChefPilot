@@ -79,7 +79,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
       _lastLogin = u['last_login'];
     }
-  // audit fetch removed
+    // audit fetch removed
     if (mounted) setState(() => loading = false);
   }
 
@@ -105,6 +105,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     }
 
+    // Capture UI bindings before awaiting network calls to avoid using BuildContext
+    final messenger = ScaffoldMessenger.of(context);
+    final nav = Navigator.of(context);
     final ok = await svc.updateUser(widget.userId, {
       'username': _usernameController.text.trim(),
       'email': _emailController.text.trim(),
@@ -115,10 +118,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       'dob': dobForServer,
     });
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+    messenger.showSnackBar(SnackBar(
         content: Text(ok ? 'Saved' : 'Failed to save'),
         duration: const Duration(seconds: 2)));
-    if (ok) Navigator.of(context).pop();
+    if (ok) nav.pop();
   }
 
   Future<void> _pickDate() async {
@@ -168,14 +171,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       TextFormField(
                         controller: _usernameController,
-                        decoration: InputDecoration(labelText: 'Username'),
+                        decoration:
+                            const InputDecoration(labelText: 'Username'),
                         validator: (v) =>
                             (v == null || v.trim().isEmpty) ? 'Required' : null,
                       ),
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: _emailController,
-                        decoration: InputDecoration(labelText: 'Email'),
+                        decoration: const InputDecoration(labelText: 'Email'),
                         validator: (v) =>
                             (v == null || v.trim().isEmpty) ? 'Required' : null,
                       ),
@@ -185,8 +189,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Expanded(
                             child: TextFormField(
                               controller: _firstController,
-                              decoration:
-                                  InputDecoration(labelText: 'First name'),
+                              decoration: const InputDecoration(
+                                  labelText: 'First name'),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -194,7 +198,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             child: TextFormField(
                               controller: _lastController,
                               decoration:
-                                  InputDecoration(labelText: 'Last name'),
+                                  const InputDecoration(labelText: 'Last name'),
                             ),
                           ),
                         ],
@@ -202,7 +206,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: _phoneController,
-                        decoration: InputDecoration(labelText: 'Phone'),
+                        decoration: const InputDecoration(labelText: 'Phone'),
                         validator: (v) {
                           if (v == null || v.trim().isEmpty) return null;
                           final digits = v.replaceAll(RegExp(r'[^0-9]'), '');
@@ -216,7 +220,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: _addressController,
-                        decoration: InputDecoration(labelText: 'Address'),
+                        decoration: const InputDecoration(labelText: 'Address'),
                         keyboardType: TextInputType.multiline,
                         minLines: 3,
                         maxLines: 6,
@@ -239,8 +243,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 IconButton(
                                   icon: const Icon(Icons.clear),
                                   onPressed: () {
-                                    if (mounted)
+                                    if (mounted) {
                                       setState(() => _dobController.text = '');
+                                    }
                                   },
                                   tooltip: 'Clear date',
                                 ),
@@ -251,8 +256,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         readOnly: true,
                         onTap: _pickDate,
                         validator: (v) {
-                          if (v == null || v.trim().isEmpty)
+                          if (v == null || v.trim().isEmpty) {
                             return null; // optional
+                          }
                           // (this space intentionally left blank)
                           return null;
                         },

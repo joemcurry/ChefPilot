@@ -69,6 +69,8 @@ const tempLogsRouter = require('./routes/temperature-logs');
 const usersRouter = require('./routes/users');
 const billingRouter = require('./routes/billing');
 const pricingOverridesRouter = require('./routes/pricing_overrides');
+const featuresRouter = require('./routes/features');
+const tenantFeaturesRouter = require('./routes/tenant_features');
 
 app.use('/api/tenants', tenantsRouter);
 app.use('/api/tasks', tasksRouter);
@@ -76,6 +78,8 @@ app.use('/api/temperature-logs', tempLogsRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/billing', billingRouter);
 app.use('/api/pricing-overrides', pricingOverridesRouter);
+app.use('/api/features', featuresRouter);
+app.use('/api/tenant-features', tenantFeaturesRouter);
 
 // Basic error handler
 app.use((err, req, res, next) => {

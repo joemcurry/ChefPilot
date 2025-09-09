@@ -116,6 +116,14 @@ const users = [
       });
       console.log('Seeded user', u.username, '->', u.tenant);
     }
+    // Seed features if features table exists
+    await new Promise((resolve, reject) => {
+      const sql = `INSERT OR IGNORE INTO features (id, name, description, enabled) VALUES
+        ('feature-seed-1','New Dashboard','Enable redesigned dashboard',1),
+        ('feature-seed-2','Beta Reports','Reporting module (beta)',0),
+        ('feature-seed-3','Quick-Order','Faster ordering flow',1);`;
+      db.run(sql, [], (err) => (err ? reject(err) : resolve()));
+    });
   } catch (err) {
     console.error('Seeding failed:', err);
     process.exit(1);

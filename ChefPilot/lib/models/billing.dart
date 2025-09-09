@@ -45,13 +45,15 @@ class Pricing {
         override: (() {
           final o = j['override'];
           if (o == null) return null;
-          if (o is Map<String, dynamic>)
+          if (o is Map<String, dynamic>) {
             return o..putIfAbsent('fromServer', () => true);
+          }
           if (o is String) {
             try {
               final parsed = jsonDecode(o);
-              if (parsed is Map<String, dynamic>)
+              if (parsed is Map<String, dynamic>) {
                 return parsed..putIfAbsent('fromServer', () => true);
+              }
               return {'value': parsed, 'fromServer': true};
             } catch (_) {
               return {'raw': o, 'fromServer': true};

@@ -6,11 +6,13 @@ class PhoneInputFormatter extends TextInputFormatter {
   TextEditingValue formatEditUpdate(
       TextEditingValue oldValue, TextEditingValue newValue) {
     var digits = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
-    if (digits.length > 10) digits = digits.substring(0, 10);
+    if (digits.length > 10) {
+      digits = digits.substring(0, 10);
+    }
 
     final buffer = StringBuffer();
     var index = 0;
-    if (digits.length >= 1) buffer.write('(');
+    if (digits.isNotEmpty) buffer.write('(');
     while (index < digits.length) {
       if (index == 3) buffer.write(') ');
       if (index == 6) buffer.write('-');

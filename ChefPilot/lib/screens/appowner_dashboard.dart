@@ -90,8 +90,11 @@ class _AppOwnerDashboardState extends State<AppOwnerDashboard> {
                 if (v == 'profile') {
                   final auth = Provider.of<AuthService>(context, listen: false);
                   final uid = auth.currentUserId ?? 'owner-1';
+                  if (!mounted) return;
                   Navigator.of(context).pushNamed('/profile/$uid');
                 } else if (v == 'logout') {
+                  // Capture navigator before awaiting the dialog to avoid using context after an async gap
+                  final nav = Navigator.of(context);
                   final confirm = await showDialog<bool>(
                     context: context,
                     builder: (c) => AlertDialog(
@@ -109,8 +112,10 @@ class _AppOwnerDashboardState extends State<AppOwnerDashboard> {
                   );
                   if (confirm == true) {
                     auth.logout();
-                    if (!mounted) return;
-                    Navigator.of(context).pushReplacementNamed('/');
+                    if (!mounted) {
+                      return;
+                    }
+                    nav.pushReplacementNamed('/');
                   }
                 }
               },
@@ -140,6 +145,15 @@ class _AppOwnerDashboardState extends State<AppOwnerDashboard> {
                 onTap: () {
                   Navigator.of(context).pop();
                   Navigator.of(context).pushNamed('/settings');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.settings_backup_restore),
+                title: const Text('Feature Management'),
+                subtitle: const Text('Manage feature flags and rollout plans'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pushNamed('/feature-management');
                 },
               ),
               const Divider(),
