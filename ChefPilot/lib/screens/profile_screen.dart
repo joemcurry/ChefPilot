@@ -15,8 +15,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   bool loading = true;
   Map<String, dynamic>? user;
-  List<Map<String, dynamic>> _audit = [];
-  bool _auditOpen = false;
+  // audit/history removed per request
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _usernameController;
   late TextEditingController _emailController;
@@ -80,8 +79,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
       _lastLogin = u['last_login'];
     }
-    final audits = await svc.fetchAudit(widget.userId, limit: 50);
-    _audit = audits;
+  // audit fetch removed
     if (mounted) setState(() => loading = false);
   }
 
@@ -277,47 +275,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               onPressed: _save, child: const Text('Save')),
                         ],
                       ),
-                      // Audit panel
-                      if (_audit.isNotEmpty) ...[
-                        const Divider(),
-                        ListTile(
-                          title: const Text('Change history'),
-                          trailing: IconButton(
-                            icon: Icon(_auditOpen
-                                ? Icons.expand_less
-                                : Icons.expand_more),
-                            onPressed: () =>
-                                setState(() => _auditOpen = !_auditOpen),
-                          ),
-                        ),
-                        if (_auditOpen)
-                          Container(
-                            height: 200,
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 0.0),
-                            child: ListView.builder(
-                              itemCount: _audit.length,
-                              itemBuilder: (context, idx) {
-                                final a = _audit[idx];
-                                final when =
-                                    a['created_at'] ?? a['createdAt'] ?? '';
-                                final by = a['changed_by'] ??
-                                    a['changedBy'] ??
-                                    'system';
-                                final changes = a['changes'] ?? {}; // map
-                                final fields = (changes is Map)
-                                    ? (changes.keys.join(', '))
-                                    : '';
-                                return ListTile(
-                                  title: Text('$when — $by'),
-                                  subtitle: Text(
-                                      fields.isEmpty ? 'modified' : fields),
-                                  dense: true,
-                                );
-                              },
-                            ),
-                          ),
-                      ],
+                      // change history removed
                     ],
                   ),
                 ),
