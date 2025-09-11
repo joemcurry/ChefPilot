@@ -323,14 +323,14 @@ class _FeatureManagementScreenState extends State<FeatureManagementScreen>
                                           label: const Text('Add'),
                                         ),
                                       ),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(
                                             horizontal: 16.0),
                                         child: Column(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                           children: [
-                                            const SizedBox(height: 8),
+                                            SizedBox(height: 8),
                                           ],
                                         ),
                                       ),
@@ -475,8 +475,9 @@ class _FeatureManagementScreenState extends State<FeatureManagementScreen>
                                                                     .applyToTenant(
                                                                         tenant!,
                                                                         featureId!);
-                                                                if (!mounted)
+                                                                if (!mounted) {
                                                                   return;
+                                                                }
                                                                 ScaffoldMessenger.of(
                                                                         context)
                                                                     .showSnackBar(const SnackBar(
@@ -501,8 +502,9 @@ class _FeatureManagementScreenState extends State<FeatureManagementScreen>
                                                                           bodyIndex +
                                                                               6);
                                                                 }
-                                                                if (!mounted)
+                                                                if (!mounted) {
                                                                   return;
+                                                                }
                                                                 ScaffoldMessenger.of(
                                                                         context)
                                                                     .showSnackBar(SnackBar(
@@ -542,11 +544,11 @@ class _FeatureManagementScreenState extends State<FeatureManagementScreen>
                           // Applied features list for selected tenant
                           Expanded(
                             child: _selectedTenantForCustom == null
-                                ? Center(
+                                ? const Center(
                                     child: Text(
                                         'Select a tenant to view custom features'))
                                 : _appliedFeatures.isEmpty
-                                    ? Center(
+                                    ? const Center(
                                         child: Text(
                                             'No custom features applied for selected tenant.'),
                                       )
@@ -574,7 +576,9 @@ class _FeatureManagementScreenState extends State<FeatureManagementScreen>
                                                   final tenantId =
                                                       _selectedTenantForCustom;
                                                   if (featureId == null ||
-                                                      tenantId == null) return;
+                                                      tenantId == null) {
+                                                    return;
+                                                  }
                                                   final confirm =
                                                       await showDialog<bool>(
                                                           context: context,
