@@ -2,16 +2,15 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'auth_service.dart';
 import '../models/feature.dart';
+import '../config.dart';
 
 class FeatureService {
   final String baseUrl;
   final http.Client client;
   final AuthService? auth;
-  FeatureService(
-      {this.baseUrl = 'http://127.0.0.1:3000/api/features',
-      http.Client? client,
-      this.auth})
-      : client = client ?? http.Client();
+  FeatureService({String? baseUrl, http.Client? client, this.auth})
+      : baseUrl = baseUrl ?? '${apiBaseUrl()}/api/features',
+        client = client ?? http.Client();
 
   Map<String, String> _headers([Map<String, String>? extra]) {
     final h = <String, String>{'Content-Type': 'application/json'};
@@ -22,9 +21,16 @@ class FeatureService {
 
   Future<List<Feature>> list() async {
     final resp = await client.get(Uri.parse(baseUrl), headers: _headers());
-    if (resp.statusCode != 200) throw Exception('Failed to load features');
-    final List decoded = json.decode(resp.body) as List;
-    return decoded.map((e) => Feature.fromJson(e)).toList();
+    if (resp.statusCode != 200) {
+      final body = resp.body;
+      throw Exception('status:${resp.statusCode} body:$body');
+    }
+    try {
+      final List decoded = json.decode(resp.body) as List;
+      return decoded.map((e) => Feature.fromJson(e)).toList();
+    } catch (e) {
+      throw Exception('Failed to parse features: $e body:${resp.body}');
+    }
   }
 
   Future<Feature> create(String name, String description, bool enabled) async {
@@ -78,20 +84,24 @@ class FeatureService {
 
   Future<void> applyToTenant(String tenantId, String featureId) async {
     final url = baseUrl.replaceFirst('/features', '/tenant-features');
+    // include development sudo header so local dev UI can perform tenant actions
     final resp = await client.post(Uri.parse(url),
-        headers: _headers(),
+        headers: _headers({'x-dev-sudo': '1'}),
         body: json.encode({'tenant_id': tenantId, 'feature_id': featureId}));
     if (resp.statusCode != 200) {
-      throw Exception('Failed to apply feature to tenant');
+      final body = resp.body;
+      throw Exception('status:$resp.statusCode body:$body');
     }
   }
 
   Future<void> removeFromTenant(String tenantId, String featureId) async {
     final url = baseUrl.replaceFirst(
         '/features', '/tenant-features/$tenantId/$featureId');
-    final resp = await client.delete(Uri.parse(url), headers: _headers());
+    final resp = await client.delete(Uri.parse(url),
+        headers: _headers({'x-dev-sudo': '1'}));
     if (resp.statusCode != 200) {
-      throw Exception('Failed to remove feature from tenant');
+      final body = resp.body;
+      throw Exception('status:$resp.statusCode body:$body');
     }
   }
 }

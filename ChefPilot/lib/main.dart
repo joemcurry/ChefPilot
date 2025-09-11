@@ -5,11 +5,16 @@ import 'package:provider/provider.dart';
 import 'services/auth_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/appowner_dashboard.dart';
-import 'screens/settings_screen.dart';
+import 'screens/billing_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/feature_management_screen.dart';
 
-void main() {
+import 'config.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // try to load runtime config (assets/config.json). If missing, AppConfig.current remains as default
+  await AppConfig.loadFromAsset('assets/config.json');
   runApp(const MyApp());
 }
 
@@ -47,7 +52,7 @@ class MyApp extends StatelessWidget {
         routes: {
           '/': (_) => const LoginScreen(),
           '/appowner': (_) => const AppOwnerDashboard(),
-          '/settings': (_) => const SettingsScreen(),
+          '/settings': (_) => const BillingScreen(),
           '/feature-management': (_) => const FeatureManagementScreen(),
           // navigate to '/profile/<userId>' using Navigator.pushNamed(context, '/profile/USERID')
         },

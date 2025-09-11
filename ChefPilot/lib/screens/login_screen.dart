@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
+import '../config.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -31,7 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _usersLoading = true;
     });
     try {
-      final uri = Uri.parse('http://127.0.0.1:3000/api/users');
+      final uri = Uri.parse('${apiBaseUrl()}/api/users');
       debugPrint('[LoginScreen] fetching users from: $uri');
       final resp = await http.get(uri).timeout(const Duration(seconds: 5));
       debugPrint('[LoginScreen] users response status: ${resp.statusCode}');

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/billing.dart';
 import 'auth_service.dart';
+import '../config.dart';
 
 class BillingService {
   final AuthService auth;
@@ -34,7 +35,7 @@ class BillingService {
   }
 
   Future<List<Pricing>> fetchFuturePricing() async {
-    final url = Uri.parse('${auth.baseUrl}/api/billing/future');
+    final url = Uri.parse('${apiBaseUrl()}/api/billing/future');
     try {
       final resp = await http.get(url, headers: auth.headers());
       if (resp.statusCode == 200) {
@@ -60,7 +61,7 @@ class BillingService {
   }
 
   Future<bool> schedulePriceUpdate(Pricing p) async {
-    final url = Uri.parse('${auth.baseUrl}/api/billing/schedule');
+    final url = Uri.parse('${apiBaseUrl()}/api/billing/schedule');
     try {
       final resp = await http.post(url,
           headers: auth.headers(), body: jsonEncode(p.toJson()));

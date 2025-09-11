@@ -6,14 +6,14 @@ import '../services/auth_service.dart';
 import '../services/billing_service.dart';
 import '../models/billing.dart';
 
-class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+class BillingScreen extends StatefulWidget {
+  const BillingScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  State<BillingScreen> createState() => _BillingScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen>
+class _BillingScreenState extends State<BillingScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<Pricing> current = [];
@@ -89,13 +89,8 @@ class _SettingsScreenState extends State<SettingsScreen>
       String? standaloneServerId;
       String? parentServerId;
       for (final c in current) {
-        if (standaloneServerId == null &&
-            (c.priceType == 'standalone' || c.standalonePricePerUser > 0))
-          standaloneServerId = c.serverId;
-        if (parentServerId == null &&
-            (c.priceType == 'parent' || c.parentTenantPricePerUser > 0))
-          parentServerId = c.serverId;
-        if (standaloneServerId != null && parentServerId != null) break;
+        if (c.priceType == 'standalone') standaloneServerId = c.serverId;
+        if (c.priceType == 'parent') parentServerId = c.serverId;
       }
       currentAggregated.add(Pricing(
         featureId: 'Standalone',
@@ -203,16 +198,17 @@ class _SettingsScreenState extends State<SettingsScreen>
                 const SizedBox(height: 8),
                 TextField(
                     controller: nameController,
-                    decoration: InputDecoration(labelText: 'Pricing name')),
+                    decoration:
+                        const InputDecoration(labelText: 'Pricing name')),
                 const SizedBox(height: 8),
                 TextField(
                     controller: priceController,
-                    decoration: InputDecoration(labelText: 'Price'),
+                    decoration: const InputDecoration(labelText: 'Price'),
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true)),
                 TextField(
                     controller: trialController,
-                    decoration: InputDecoration(labelText: 'Trial days')),
+                    decoration: const InputDecoration(labelText: 'Trial days')),
               ],
             ),
             actions: [
@@ -251,7 +247,6 @@ class _SettingsScreenState extends State<SettingsScreen>
                   final id =
                       await billing.createOverride(selectedTenant!['id']!, p);
                   if (id != null) {
-                    // attach server id and reload from server
                     await _loadOverrides();
                     if (!mounted) return;
                     messenger
@@ -292,11 +287,11 @@ class _SettingsScreenState extends State<SettingsScreen>
                 children: [
                   TextField(
                       controller: nameController,
-                      decoration: InputDecoration(labelText: 'Name')),
+                      decoration: const InputDecoration(labelText: 'Name')),
                   const SizedBox(height: 8),
                   TextField(
                       controller: priceController,
-                      decoration: InputDecoration(labelText: 'Price'),
+                      decoration: const InputDecoration(labelText: 'Price'),
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true)),
                   const SizedBox(height: 8),
@@ -304,7 +299,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                   const SizedBox(height: 8),
                   TextField(
                       controller: trialController,
-                      decoration: InputDecoration(labelText: 'Trial days'),
+                      decoration:
+                          const InputDecoration(labelText: 'Trial days'),
                       keyboardType: const TextInputType.numberWithOptions(
                           decimal: false)),
                 ],
@@ -376,24 +372,13 @@ class _SettingsScreenState extends State<SettingsScreen>
                   double newStandalone = p.standalonePricePerUser;
                   double newParent = p.parentTenantPricePerUser;
                   if (parsedPrice != null) {
-                    // Determine priceType for custom overrides using the override.tenantId if present
-                    String effectivePriceType = priceTypeValue;
-                    if (isCustom) {
-                      final tenantId = p.override != null &&
-                              p.override is Map<String, dynamic>
-                          ? (p.override as Map<String, dynamic>)['tenantId']
-                              as String?
-                          : null;
-                      effectivePriceType = _priceTypeForTenantId(tenantId);
-                    }
-                    if (effectivePriceType == 'standalone') {
+                    if (priceTypeValue == 'standalone') {
                       newStandalone = parsedPrice;
-                    } else {
+                    }
+                    if (priceTypeValue == 'parent') {
                       newParent = parsedPrice;
                     }
-                    priceTypeValue = effectivePriceType;
                   }
-
                   final updated = Pricing(
                     featureId: nameController.text.trim(),
                     standalonePricePerUser: newStandalone,
@@ -401,9 +386,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                     trialDays: int.tryParse(trialController.text) ?? 0,
                     hasOverride: p.hasOverride,
                     override: p.override,
-                    effectiveAt: isCustom
-                        ? p.effectiveAt
-                        : (p.effectiveAt ?? DateTime.now()),
+                    effectiveAt: p.effectiveAt,
+                    serverId: p.serverId,
                     price: parsedPrice,
                     priceType: priceTypeValue,
                   );
@@ -436,17 +420,12 @@ class _SettingsScreenState extends State<SettingsScreen>
                           await _loadOverrides();
                           if (!mounted) return;
                           messenger.showSnackBar(
-                              const SnackBar(content: Text('Saved to server')));
+                              const SnackBar(content: Text('Created')));
                         } else {
                           if (!mounted) return;
                           messenger.showSnackBar(
-                              const SnackBar(content: Text('Failed to save')));
+                              const SnackBar(content: Text('Failed')));
                         }
-                      } else {
-                        final idx = custom.indexWhere((c) =>
-                            c.featureId == p.featureId &&
-                            c.effectiveAt == p.effectiveAt);
-                        if (idx != -1) setState(() => custom[idx] = updated);
                       }
                     }
                   } else {
@@ -485,7 +464,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: const Text('Billing'),
         bottom: TabBar(controller: _tabController, tabs: const [
           Tab(text: 'Current Pricing'),
           Tab(text: 'Custom Pricing'),
@@ -493,19 +472,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       ),
       body: Column(
         children: [
-          // Feature Management menu entry (always visible)
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-            child: ListTile(
-              title: const Text('Feature Management'),
-              subtitle: const Text('Manage feature flags and rollout plans'),
-              leading: const Icon(Icons.settings_backup_restore),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () =>
-                  Navigator.of(context).pushNamed('/feature-management'),
-            ),
-          ),
+          // (Feature Management entry removed from billing screen)
           // Main tab content
           Expanded(
             child: loading
@@ -544,7 +511,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                                           Text(p.featureId,
                                               style: const TextStyle(
                                                   fontWeight: FontWeight.w600)),
-                                          const SizedBox(height: 4),
+                                          const SizedBox(height: 6),
                                           Text(
                                               '${p.priceType ?? 'standalone'} • ${p.trialDays}d',
                                               style: const TextStyle(
@@ -617,9 +584,18 @@ class _SettingsScreenState extends State<SettingsScreen>
                                                   style: const TextStyle(
                                                       fontWeight:
                                                           FontWeight.w600)),
-                                              Chip(
-                                                  label: Text(
-                                                      '\$${(p.price ?? p.standalonePricePerUser).toStringAsFixed(2)}')),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                  '${p.priceType ?? 'standalone'} • ${p.trialDays}d',
+                                                  style: const TextStyle(
+                                                      color: Colors.black54,
+                                                      fontSize: 12)),
+                                              if (p.effectiveAt != null)
+                                                Text(
+                                                    'Effective: ${p.effectiveAt!.toLocal().toIso8601String()}',
+                                                    style: const TextStyle(
+                                                        color: Colors.black45,
+                                                        fontSize: 11)),
                                             ],
                                           ),
                                           const SizedBox(height: 6),
@@ -645,7 +621,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                         ],
                       ),
                     ],
-                  ), // end TabBarView
+                  ),
           ), // end Expanded
         ], // end Column children
       ), // end Column

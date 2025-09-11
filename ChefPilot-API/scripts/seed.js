@@ -17,11 +17,8 @@ const users = [
       const hash = await bcrypt.hash(u.password, 10);
       // Upsert: ensure password is updated even if a plaintext value exists
       await new Promise((resolve, reject) => {
-        const sql = `INSERT INTO users (id, username, password, user_type)
-                     VALUES (?, ?, ?, ?)
-                     ON CONFLICT(username) DO UPDATE SET
-                       password=excluded.password,
-                       user_type=excluded.user_type;`;
+        const sql = `INSERT OR REPLACE INTO users (id, username, password, user_type)
+                     VALUES (?, ?, ?, ?)`;
         db.run(sql, [u.id, u.username, hash, u.user_type], (err) => (err ? reject(err) : resolve()));
       });
       console.log('Seeded user', u.username);
@@ -106,7 +103,7 @@ const users = [
     for (const u of tenantUsers) {
       const hash = await bcrypt.hash(u.password, 10);
       await new Promise((resolve, reject) => {
-        const sql = `INSERT INTO users (id, username, password, user_type) VALUES (?, ?, ?, ?) ON CONFLICT(username) DO UPDATE SET password=excluded.password, user_type=excluded.user_type;`;
+        const sql = `INSERT OR REPLACE INTO users (id, username, password, user_type) VALUES (?, ?, ?, ?);`;
         db.run(sql, [u.id, u.username, hash, u.user_type], (err) => (err ? reject(err) : resolve()));
       });
       // map to tenant

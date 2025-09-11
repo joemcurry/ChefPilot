@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import '../config.dart';
 
 class AuthService extends ChangeNotifier {
   String? _token;
@@ -12,7 +13,7 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
-  final String baseUrl = 'http://127.0.0.1:3000';
+  final String baseUrl = apiBaseUrl();
 
   Future<bool> login(String username, String password) async {
     final uri = Uri.parse('$baseUrl/api/auth/login');
